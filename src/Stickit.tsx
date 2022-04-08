@@ -1,24 +1,33 @@
-import { ReactNode, FC, useRef, useState, CSSProperties, useCallback, useEffect } from 'react';
+import React, {
+  ReactNode,
+  FC,
+  useRef,
+  useState,
+  CSSProperties,
+  useCallback,
+  useEffect,
+} from 'react';
 import { createPortal } from 'react-dom';
 import throttle from 'lodash.throttle';
+import PropTypes from 'prop-types';
 
 export interface StickitProps {
   children: ReactNode;
   boundary?: {
-    top?: string;
-    bottom?: string;
-  },
+    top?: string | null;
+    bottom?: string | null;
+  };
   disabled?: boolean;
   throttleTime?: number;
-  stickyWrapperProps?: React.DetailedHTMLProps<React.HTMLAttributes<HTMLDivElement>, HTMLDivElement>;
+  stickyWrapperProps?: React.DetailedHTMLProps<
+    React.HTMLAttributes<HTMLDivElement>,
+    HTMLDivElement
+  >;
 }
 
 export const Stickit: FC<StickitProps> = ({
   children,
-  boundary: {
-    top: topBoundarySelector,
-    bottom: bottomBoundarySelector,
-  } = {},
+  boundary: { top: topBoundarySelector, bottom: bottomBoundarySelector } = {},
   disabled = false,
   throttleTime = 50,
   stickyWrapperProps = {},
@@ -28,42 +37,52 @@ export const Stickit: FC<StickitProps> = ({
   const [styles, setStyles] = useState<CSSProperties>({});
   const isSticky = styles.position === 'fixed' || styles.position === 'absolute';
 
-  const handleScrollEvent = useCallback(throttle(
-    () => {
-      if (!originalRef.current) return;
+  const handleScrollEvent = useCallback(
+    () =>
+      throttle(() => {
+        if (!originalRef.current) return;
 
-      const bottomBoundaryElement = (bottomBoundarySelector && document.querySelector(bottomBoundarySelector) as HTMLElement) || null;
+        const bottomBoundaryElement =
+          (bottomBoundarySelector &&
+            (document.querySelector(bottomBoundarySelector) as HTMLElement)) ||
+          null;
 
-      const originalRect = originalRef.current.getBoundingClientRect();
-      const topBoundaryRect = (topBoundarySelector && document.querySelector(topBoundarySelector)?.getBoundingClientRect()) || null;
+        const originalRect = originalRef.current.getBoundingClientRect();
+        const topBoundaryRect =
+          (topBoundarySelector &&
+            document.querySelector(topBoundarySelector)?.getBoundingClientRect()) ||
+          null;
 
-      if (stickyRef.current && bottomBoundaryElement) {
-        const bottomBoundaryRect = bottomBoundaryElement.getBoundingClientRect();
-        const stickyRect = stickyRef.current.getBoundingClientRect();
+        if (stickyRef.current && bottomBoundaryElement) {
+          const bottomBoundaryRect = bottomBoundaryElement.getBoundingClientRect();
+          const stickyRect = stickyRef.current.getBoundingClientRect();
 
-        if (stickyRect.bottom >= Math.floor(bottomBoundaryRect.top) && stickyRect.top <= (topBoundaryRect?.bottom ?? 0)) {
+          if (
+            stickyRect.bottom >= Math.floor(bottomBoundaryRect.top) &&
+            stickyRect.top <= (topBoundaryRect?.bottom ?? 0)
+          ) {
+            setStyles({
+              position: 'absolute',
+              width: originalRect.width,
+              top: bottomBoundaryElement.offsetTop - stickyRect.height,
+            });
+            return;
+          }
+        }
+
+        if (originalRect.top < (topBoundaryRect?.bottom ?? 0)) {
           setStyles({
-            position: 'absolute',
+            position: 'fixed',
             width: originalRect.width,
-            top: bottomBoundaryElement.offsetTop - stickyRect.height,
+            top: topBoundaryRect?.bottom ?? 0,
           });
           return;
         }
-      }
 
-      if (originalRect.top < (topBoundaryRect?.bottom ?? 0)) {
-        setStyles({
-          position: 'fixed',
-          width: originalRect.width,
-          top: topBoundaryRect?.bottom ?? 0,
-        });
-        return;
-      }
-
-      setStyles({})
-    },
-    throttleTime,
-  ), [topBoundarySelector, bottomBoundarySelector, throttleTime])
+        setStyles({});
+      }, throttleTime)(),
+    [topBoundarySelector, bottomBoundarySelector, throttleTime]
+  );
 
   useEffect(() => {
     if (!disabled) {
@@ -71,17 +90,41 @@ export const Stickit: FC<StickitProps> = ({
     }
 
     return () => {
-        window.removeEventListener('scroll', handleScrollEvent);
-    }
-}, [handleScrollEvent, disabled])
+      window.removeEventListener('scroll', handleScrollEvent);
+    };
+  }, [handleScrollEvent, disabled]);
 
   return (
     <>
-      {isSticky && createPortal(
-          <div {...stickyWrapperProps} ref={stickyRef} style={styles}>{children}</div>,
-          document.body,
-      )}
-      <div ref={originalRef} style={{ opacity: isSticky ? 0 : undefined }}>{children}</div>
+      {isSticky &&
+        createPortal(
+          <div {...stickyWrapperProps} ref={stickyRef} style={styles}>
+            {children}
+          </div>,
+          document.body
+        )}
+      <div ref={originalRef} style={{ opacity: isSticky ? 0 : undefined }}>
+        {children}
+      </div>
     </>
-  )
-}
+  );
+};
+
+Stickit.propTypes = {
+  children: PropTypes.node.isRequired,
+  boundary: PropTypes.shape({
+    top: PropTypes.string,
+    bottom: PropTypes.string,
+  }),
+  disabled: PropTypes.bool,
+  throttleTime: PropTypes.number,
+  // eslint-disable-next-line react/forbid-prop-types
+  stickyWrapperProps: PropTypes.object,
+};
+
+Stickit.defaultProps = {
+  boundary: {},
+  disabled: false,
+  throttleTime: 50,
+  stickyWrapperProps: {},
+};
