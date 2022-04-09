@@ -1,11 +1,10 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "module": "commonjs",
-    "jsx": "react-jsx",
+    "module": "CommonJS",
+    "jsx": "react",
     "declaration": true,
-    "outDir": "./dist",
-    "rootDir": "./src",
+    "noEmit": true,
     "removeComments": true,
     "strict": true,
     "noUnusedLocals": true,

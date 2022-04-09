@@ -9,13 +9,12 @@ import React, {
 } from 'react';
 import { createPortal } from 'react-dom';
 import throttle from 'lodash.throttle';
-import PropTypes from 'prop-types';
 
 export interface StickitProps {
   children: ReactNode;
   boundary?: {
-    top?: string | null;
-    bottom?: string | null;
+    top?: string;
+    bottom?: string;
   };
   disabled?: boolean;
   throttleTime?: number;
@@ -108,18 +107,6 @@ export const Stickit: FC<StickitProps> = ({
       </div>
     </>
   );
-};
-
-Stickit.propTypes = {
-  children: PropTypes.node.isRequired,
-  boundary: PropTypes.shape({
-    top: PropTypes.string,
-    bottom: PropTypes.string,
-  }),
-  disabled: PropTypes.bool,
-  throttleTime: PropTypes.number,
-  // eslint-disable-next-line react/forbid-prop-types
-  stickyWrapperProps: PropTypes.object,
 };
 
 Stickit.defaultProps = {

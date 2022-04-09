@@ -2,10 +2,11 @@
   "name": "react-stickit",
   "version": "1.0.0",
   "description": "Small and fast react sticky library",
-  "main": "./dist/index.js",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch",
+    "build": "rimraf dist && tsc && rollup -c",
+    "watch": "rollup -c -w",
     "test": "test",
     "lint": "eslint ./src --ext .ts,.tsx --fix",
     "lint:fix": "npm run lint --fix",
@@ -13,11 +14,14 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CptHeartless/react-stickit"
+    "url": "git+https://github.com/CptHeartless/react-stickit"
   },
+  "bugs": {
+    "url": "https://github.com/CptHeartless/react-stickit/issues"
+  },
+  "homepage": "https://github.com/CptHeartless/react-stickit#readme",
   "dependencies": {
-    "lodash.throttle": "^4.1.1",
-    "prop-types": "^15.8.1"
+    "lodash.throttle": "^4.1.1"
   },
   "peerDependencies": {
     "react": "^17.0.2",
@@ -40,6 +44,9 @@
     "husky": "^7.0.4",
     "lint-staged": "^12.3.7",
     "prettier": "2.6.2",
+    "rimraf": "^3.0.2",
+    "rollup": "^2.70.1",
+    "rollup-plugin-typescript2": "^0.31.2",
     "typescript": "^4.6.3"
   },
   "keywords": [
@@ -49,9 +56,11 @@
   "author": "Eugene",
   "license": "MIT",
   "lint-staged": {
-    "*.{ts,tsx}": [
-      "eslint ./src --ext .ts,.tsx",
-      "prettier ./src --write"
+    ".tsx?": [
+      "tsc",
+      "npm run lint:fix",
+      "prettier ./src --write",
+      "git add"
     ]
   }
 }
